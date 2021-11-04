@@ -70,7 +70,6 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             % something about building model here (from global structure
             % with model input information)
             % Run the simulations
-            S.v_tgt     = 1.3;        % average speed
             S.N         = 50;       % number of mesh intervals
             
             % path repository
@@ -172,6 +171,8 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             mSel = m.getMuscles.get('rect_fem_l');
             FSel = mSel.getMaxIsometricForce();
             mSel.setMaxIsometricForce(FSel + app.RectusfemorisEditField.Value);
+            
+            % print the osim model to an .osim file
             m.print(fullfile(S.pathRepo,'OpenSimModel','ModelDagWetenschap.osim'));
             S.ModelPath = fullfile(S.pathRepo,'OpenSimModel','ModelDagWetenschap.osim');
             
@@ -201,10 +202,12 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             S.MotFile = fullfile(S.pathRepo,'Results',S.ResultsFolder,[S.savename '_q.mot']); % file with outputs
             app.ReadyLamp.Color = 'red';
             drawnow
-            % predictive simulation
+            
+            % Run the predictive simulation
             [Results] = f_PredSim_2D_trapezoidal_OptSpeed(S);
             app.ReadyLamp.Color = 'green';
             drawnow
+            
             % adjust savename to original name (this causes problems with
             % the visulaisation
             if BoolNameAdjusted
@@ -229,9 +232,6 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
                 app.SimulationResults.Value = [app.SimulationResults.Value; {'My worst nightmare just occured :), the optimization did not converge ...'}];
                 app.SimulationResults.Value = [app.SimulationResults.Value; {'Please adjust the model parameters and execute the simulation again'}];
             end
-            
-            % print somethings to the screen
-            %             SimulatonoutputTextAreaValueChanged()
         end
 
         % Value changed function: SimulationResults
@@ -244,7 +244,6 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             global S
             global vis
             global model_state;
-            %global osimModel
             try
                 motFile = S.MotFile;
                 if ~exist(motFile,'file')
@@ -253,8 +252,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
                 end
                 dat = ReadMotFile(motFile);
                 dt = dat.data(2,1)-dat.data(1,1);
-                N = length(dat.data(:,1));
-                
+                N = length(dat.data(:,1));                
                 CoordNamesAPI = {'pelvis_tilt','pelvis_tx','pelvis_ty','hip_flexion_r',...
                     'hip_flexion_l','lumbar_extension','knee_angle_r','knee_angle_l','ankle_angle_r','ankle_angle_l','mtp_angle_r','mtp_angle_l'};
                 
@@ -287,7 +285,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
         end
 
         % Button pushed function: Button
-        function ButtonPushed(app, event)
+        function AddSoleusF(app, event)
             global MForceAv
             if MForceAv>0
                 MForceAv = MForceAv-50;
@@ -300,7 +298,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
         end
 
         % Button pushed function: Button_2
-        function Button_2Pushed(app, event)
+        function MinusSoleusF(app, event)
             global MForceAv
             MForceAv = MForceAv+50;
             app.MuscleForceNEditField.Value = MForceAv;
@@ -309,7 +307,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
         end
 
         % Button pushed function: Button_3
-        function Button_3Pushed(app, event)
+        function AddGastrocF(app, event)
             global MForceAv
             if MForceAv>0
                 MForceAv = MForceAv-50;
@@ -321,7 +319,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
         end
 
         % Button pushed function: Button_4
-        function Button_4Pushed(app, event)
+        function MinusGastrocF(app, event)
             global MForceAv
             MForceAv = MForceAv+50;
             app.MuscleForceNEditField.Value = MForceAv;
@@ -329,7 +327,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
         end
 
         % Button pushed function: Button_5
-        function Button_5Pushed(app, event)
+        function AddRectusF(app, event)
             global MForceAv
             if MForceAv>0
                 MForceAv = MForceAv-50;
@@ -341,7 +339,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
         end
 
         % Button pushed function: Button_6
-        function Button_6Pushed(app, event)
+        function MinusRectusF(app, event)
             global MForceAv
             MForceAv = MForceAv+50;
             app.MuscleForceNEditField.Value = MForceAv;
@@ -381,25 +379,13 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
 
         % Close request function: UIFigure
         function UIFigureCloseRequest(app, event)
-            
-            % add path to simulation code
-            %TxtPath = which('MyID_PredSim2D_ab87ex.txt');
-            %[MainPath,~,~] = fileparts(TxtPath);
-            %rmpath(genpath(fullfile(MainPath)));
-            
-            % add the casadipath
-            %CasFilePath = which('casadiMEX.mexw64');
-            %[CasPath,~,~] = fileparts(CasFilePath);
-            %rmpath(genpath(CasPath));
-            
             % delete the app
             delete(app)
         end
 
         % Callback function
         function UIFigureCloseRequest2(app, event)
-            delete(app)
-            
+            delete(app)            
         end
     end
 
@@ -525,37 +511,37 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
 
             % Create Button
             app.Button = uibutton(app.MuscleforcePanel, 'push');
-            app.Button.ButtonPushedFcn = createCallbackFcn(app, @ButtonPushed, true);
+            app.Button.ButtonPushedFcn = createCallbackFcn(app, @AddSoleusF, true);
             app.Button.Position = [12 235 70 22];
             app.Button.Text = '+';
 
             % Create Button_2
             app.Button_2 = uibutton(app.MuscleforcePanel, 'push');
-            app.Button_2.ButtonPushedFcn = createCallbackFcn(app, @Button_2Pushed, true);
+            app.Button_2.ButtonPushedFcn = createCallbackFcn(app, @MinusSoleusF, true);
             app.Button_2.Position = [12 205 70 22];
             app.Button_2.Text = '-';
 
             % Create Button_3
             app.Button_3 = uibutton(app.MuscleforcePanel, 'push');
-            app.Button_3.ButtonPushedFcn = createCallbackFcn(app, @Button_3Pushed, true);
+            app.Button_3.ButtonPushedFcn = createCallbackFcn(app, @AddGastrocF, true);
             app.Button_3.Position = [12 158 70 22];
             app.Button_3.Text = '+';
 
             % Create Button_4
             app.Button_4 = uibutton(app.MuscleforcePanel, 'push');
-            app.Button_4.ButtonPushedFcn = createCallbackFcn(app, @Button_4Pushed, true);
+            app.Button_4.ButtonPushedFcn = createCallbackFcn(app, @MinusGastrocF, true);
             app.Button_4.Position = [12 128 70 22];
             app.Button_4.Text = '-';
 
             % Create Button_5
             app.Button_5 = uibutton(app.MuscleforcePanel, 'push');
-            app.Button_5.ButtonPushedFcn = createCallbackFcn(app, @Button_5Pushed, true);
+            app.Button_5.ButtonPushedFcn = createCallbackFcn(app, @AddRectusF, true);
             app.Button_5.Position = [12 80 70 22];
             app.Button_5.Text = '+';
 
             % Create Button_6
             app.Button_6 = uibutton(app.MuscleforcePanel, 'push');
-            app.Button_6.ButtonPushedFcn = createCallbackFcn(app, @Button_6Pushed, true);
+            app.Button_6.ButtonPushedFcn = createCallbackFcn(app, @MinusRectusF, true);
             app.Button_6.Position = [12 50 70 22];
             app.Button_6.Text = '-';
 
