@@ -314,7 +314,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             if MForceAv>0
                 MForceAv = MForceAv-50;
                 app.MuscleForceNEditField.Value = MForceAv;
-                app.GastrocnemiusNEditField.Value = app.GastrocnemiusNEditField.Value+50;
+                app.GastrocnemiusEditField.Value = app.GastrocnemiusEditField.Value+50;
             else
                 app.SimulationResults.Value = [app.SimulationResults.Value; {'You used all the additional muscle force'}];
             end
@@ -325,7 +325,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             global MForceAv
             MForceAv = MForceAv+50;
             app.MuscleForceNEditField.Value = MForceAv;
-            app.GastrocnemiusNEditField.Value = app.GastrocnemiusNEditField.Value-50;
+            app.GastrocnemiusEditField.Value = app.GastrocnemiusEditField.Value-50;
         end
 
         % Button pushed function: Button_5
