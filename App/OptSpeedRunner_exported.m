@@ -4,7 +4,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
     properties (Access = public)
         UIFigure                      matlab.ui.Figure
         SimulateButton                matlab.ui.control.Button
-        VideosimulationButton         matlab.ui.control.Button
+        VideoButton                   matlab.ui.control.Button
         ResultsTableButton            matlab.ui.control.Button
         SimulatonoutputTextAreaLabel  matlab.ui.control.Label
         SimulationResults             matlab.ui.control.TextArea
@@ -12,13 +12,13 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
         FirstNameEditField            matlab.ui.control.EditField
         DagvandewetenschapLabel       matlab.ui.control.Label
         Image                         matlab.ui.control.Image
-        MailResultsButton             matlab.ui.control.Button
         ClearWindowButton             matlab.ui.control.Button
         ScoreAxis                     matlab.ui.control.UIAxes
         TendonstiffnessPanel          matlab.ui.container.Panel
         NormachillestendonstiffnessSliderLabel  matlab.ui.control.Label
         NormachillestendonstiffnessSlider  matlab.ui.control.Slider
         UIAxes                        matlab.ui.control.UIAxes
+        Image3                        matlab.ui.control.Image
         MuscleforcePanel              matlab.ui.container.Panel
         Button                        matlab.ui.control.Button
         Button_2                      matlab.ui.control.Button
@@ -30,14 +30,14 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
         MuscleForceNEditField         matlab.ui.control.NumericEditField
         SoleusEditFieldLabel          matlab.ui.control.Label
         SoleusEditField               matlab.ui.control.NumericEditField
-        GastrocnemiusNEditFieldLabel  matlab.ui.control.Label
-        GastrocnemiusNEditField       matlab.ui.control.NumericEditField
-        RectusFemorisNEditFieldLabel  matlab.ui.control.Label
-        RectusFemorisNEditField       matlab.ui.control.NumericEditField
+        GastrocnemiusEditFieldLabel   matlab.ui.control.Label
+        GastrocnemiusEditField        matlab.ui.control.NumericEditField
+        RectusfemorisEditFieldLabel   matlab.ui.control.Label
+        RectusfemorisEditField        matlab.ui.control.NumericEditField
         MuscleForceLabel              matlab.ui.control.Label
+        Image2                        matlab.ui.control.Image
         ReadyLampLabel                matlab.ui.control.Label
         ReadyLamp                     matlab.ui.control.Lamp
-        Image2                        matlab.ui.control.Image
         MusculoskeletalmodelLabel     matlab.ui.control.Label
     end
 
@@ -106,7 +106,8 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             S.linear_solver = 'mumps';
             
             % Simulation without exoskeelton
-            S.ExternalFunc  = 'FastRunner.dll';
+            %S.ExternalFunc  = 'FastRunner.dll';
+            S.ExternalFunc  = 'PredSim_2D_default_mtp_v3.dll';
             S.savename      = 'DefaultSim';
             
             % tolerance ipopt
@@ -159,18 +160,18 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             % adapt gastrocnemius force
             mSel = m.getMuscles.get('gastroc_r');
             FSel = mSel.getMaxIsometricForce();
-            mSel.setMaxIsometricForce(FSel + app.GastrocnemiusNEditField.Value);
+            mSel.setMaxIsometricForce(FSel + app.GastrocnemiusEditField.Value);
             mSel = m.getMuscles.get('gastroc_l');
             FSel = mSel.getMaxIsometricForce();
-            mSel.setMaxIsometricForce(FSel + app.GastrocnemiusNEditField.Value);
+            mSel.setMaxIsometricForce(FSel + app.GastrocnemiusEditField.Value);
             
             % adapt rectus femoris force
             mSel = m.getMuscles.get('rect_fem_r');
             FSel = mSel.getMaxIsometricForce();
-            mSel.setMaxIsometricForce(FSel + app.RectusFemorisNEditField.Value);
+            mSel.setMaxIsometricForce(FSel + app.RectusfemorisEditField.Value);
             mSel = m.getMuscles.get('rect_fem_l');
             FSel = mSel.getMaxIsometricForce();
-            mSel.setMaxIsometricForce(FSel + app.RectusFemorisNEditField.Value);
+            mSel.setMaxIsometricForce(FSel + app.RectusfemorisEditField.Value);
             m.print(fullfile(S.pathRepo,'OpenSimModel','ModelDagWetenschap.osim'));
             S.ModelPath = fullfile(S.pathRepo,'OpenSimModel','ModelDagWetenschap.osim');
             
@@ -238,8 +239,8 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             % figure ?
         end
 
-        % Button pushed function: VideosimulationButton
-        function VideosimulationButtonPushed(app, event)
+        % Button pushed function: VideoButton
+        function VideoButtonPushed(app, event)
             global S
             global vis
             global model_state;
@@ -282,21 +283,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
                 end
             catch
                 app.SimulationResults.Value = [app.SimulationResults.Value; {'Unknown error in visualisation'}];
-            end
-            
-            
-            %             try
-            %             % evaluate if file exists
-            %             motFile = fullfile(S.pathRepo,'Results',S.ResultsFolder,[S.savename '_q.mot']);
-            %             if exist(motFile,'file')
-            %                 ModelPath = fullfile(S.pathRepo,'OpenSimModel','Gait18_Visual.osim');
-            %                 Visualise2DModel(ModelPath,motFile,4);
-            %             else
-            %                 app.SimulationResults.Value = [app.SimulationResults.Value; { 'Please run the simulation first'}];
-            %             end
-            %             catch
-            %                 app.SimulationResults.Value = [app.SimulationResults.Value; {'Unknown error in visualisation'}];
-            %             end
+            end           
         end
 
         % Button pushed function: Button
@@ -347,7 +334,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             if MForceAv>0
                 MForceAv = MForceAv-50;
                 app.MuscleForceNEditField.Value = MForceAv;
-                app.RectusFemorisNEditField.Value = app.RectusFemorisNEditField.Value+50;
+                app.RectusfemorisEditField.Value = app.RectusfemorisEditField.Value+50;
             else
                 app.SimulationResults.Value = [app.SimulationResults.Value; {'You used all the additional muscle force'}];
             end
@@ -358,7 +345,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             global MForceAv
             MForceAv = MForceAv+50;
             app.MuscleForceNEditField.Value = MForceAv;
-            app.RectusFemorisNEditField.Value = app.RectusFemorisNEditField.Value-50;
+            app.RectusfemorisEditField.Value = app.RectusfemorisEditField.Value-50;
         end
 
         % Button pushed function: ClearWindowButton
@@ -424,48 +411,50 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
 
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [100 100 1194 874];
+            app.UIFigure.Position = [100 100 1252 874];
             app.UIFigure.Name = 'MATLAB App';
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @UIFigureCloseRequest, true);
 
             % Create SimulateButton
             app.SimulateButton = uibutton(app.UIFigure, 'push');
             app.SimulateButton.ButtonPushedFcn = createCallbackFcn(app, @SimulateButtonPushed, true);
-            app.SimulateButton.Position = [69 744 139 47];
+            app.SimulateButton.Position = [70 648 139 47];
             app.SimulateButton.Text = 'Simulate';
 
-            % Create VideosimulationButton
-            app.VideosimulationButton = uibutton(app.UIFigure, 'push');
-            app.VideosimulationButton.ButtonPushedFcn = createCallbackFcn(app, @VideosimulationButtonPushed, true);
-            app.VideosimulationButton.Position = [261 664 150 42];
-            app.VideosimulationButton.Text = 'Video simulation';
+            % Create VideoButton
+            app.VideoButton = uibutton(app.UIFigure, 'push');
+            app.VideoButton.ButtonPushedFcn = createCallbackFcn(app, @VideoButtonPushed, true);
+            app.VideoButton.Position = [458 648 150 42];
+            app.VideoButton.Text = 'Video';
 
             % Create ResultsTableButton
             app.ResultsTableButton = uibutton(app.UIFigure, 'push');
-            app.ResultsTableButton.Position = [65 664 150 42];
+            app.ResultsTableButton.Position = [259 650 150 42];
             app.ResultsTableButton.Text = 'Results Table';
 
             % Create SimulatonoutputTextAreaLabel
             app.SimulatonoutputTextAreaLabel = uilabel(app.UIFigure);
             app.SimulatonoutputTextAreaLabel.HorizontalAlignment = 'right';
-            app.SimulatonoutputTextAreaLabel.Position = [920 380 96 22];
+            app.SimulatonoutputTextAreaLabel.FontSize = 14;
+            app.SimulatonoutputTextAreaLabel.FontWeight = 'bold';
+            app.SimulatonoutputTextAreaLabel.Position = [870 704 121 22];
             app.SimulatonoutputTextAreaLabel.Text = 'Simulaton output';
 
             % Create SimulationResults
             app.SimulationResults = uitextarea(app.UIFigure);
             app.SimulationResults.ValueChangedFcn = createCallbackFcn(app, @SimulationResultsValueChanged, true);
-            app.SimulationResults.Position = [756 11 424 352];
+            app.SimulationResults.Position = [656 428 574 259];
 
             % Create FirstNameEditFieldLabel
             app.FirstNameEditFieldLabel = uilabel(app.UIFigure);
             app.FirstNameEditFieldLabel.HorizontalAlignment = 'right';
-            app.FirstNameEditFieldLabel.Position = [261 755 64 22];
+            app.FirstNameEditFieldLabel.Position = [70 754 64 22];
             app.FirstNameEditFieldLabel.Text = 'First Name';
 
             % Create FirstNameEditField
             app.FirstNameEditField = uieditfield(app.UIFigure, 'text');
             app.FirstNameEditField.ValueChangedFcn = createCallbackFcn(app, @FirstNameEditFieldValueChanged, true);
-            app.FirstNameEditField.Position = [340 755 166 22];
+            app.FirstNameEditField.Position = [149 754 285 22];
 
             % Create DagvandewetenschapLabel
             app.DagvandewetenschapLabel = uilabel(app.UIFigure);
@@ -479,15 +468,10 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             app.Image.Position = [1080 764 100 100];
             app.Image.ImageSource = 'HMBLogo.png';
 
-            % Create MailResultsButton
-            app.MailResultsButton = uibutton(app.UIFigure, 'push');
-            app.MailResultsButton.Position = [454 664 164 42];
-            app.MailResultsButton.Text = 'Mail Results';
-
             % Create ClearWindowButton
             app.ClearWindowButton = uibutton(app.UIFigure, 'push');
             app.ClearWindowButton.ButtonPushedFcn = createCallbackFcn(app, @ClearWindowButtonPushed, true);
-            app.ClearWindowButton.Position = [1080 371 100 22];
+            app.ClearWindowButton.Position = [1110 708 100 22];
             app.ClearWindowButton.Text = 'Clear Window';
 
             % Create ScoreAxis
@@ -495,25 +479,27 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             title(app.ScoreAxis, 'Score History')
             xlabel(app.ScoreAxis, 'Attempt')
             ylabel(app.ScoreAxis, 'Running speed')
-            app.ScoreAxis.Position = [27 446 617 160];
+            app.ScoreAxis.Position = [37 428 554 160];
 
             % Create TendonstiffnessPanel
             app.TendonstiffnessPanel = uipanel(app.UIFigure);
             app.TendonstiffnessPanel.Title = 'Tendon stiffness';
             app.TendonstiffnessPanel.BackgroundColor = [0.7098 0.8549 0.9216];
-            app.TendonstiffnessPanel.Position = [323 15 410 378];
+            app.TendonstiffnessPanel.FontWeight = 'bold';
+            app.TendonstiffnessPanel.FontSize = 14;
+            app.TendonstiffnessPanel.Position = [656 15 584 378];
 
             % Create NormachillestendonstiffnessSliderLabel
             app.NormachillestendonstiffnessSliderLabel = uilabel(app.TendonstiffnessPanel);
             app.NormachillestendonstiffnessSliderLabel.HorizontalAlignment = 'right';
-            app.NormachillestendonstiffnessSliderLabel.Position = [134 330 165 22];
+            app.NormachillestendonstiffnessSliderLabel.Position = [134 328 165 22];
             app.NormachillestendonstiffnessSliderLabel.Text = 'Norm achilles tendon stiffness';
 
             % Create NormachillestendonstiffnessSlider
             app.NormachillestendonstiffnessSlider = uislider(app.TendonstiffnessPanel);
             app.NormachillestendonstiffnessSlider.Limits = [20 50];
             app.NormachillestendonstiffnessSlider.ValueChangedFcn = createCallbackFcn(app, @NormachillestendonstiffnessSliderValueChanged, true);
-            app.NormachillestendonstiffnessSlider.Position = [134 310 150 3];
+            app.NormachillestendonstiffnessSlider.Position = [134 308 150 3];
             app.NormachillestendonstiffnessSlider.Value = 35;
 
             % Create UIAxes
@@ -522,112 +508,126 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             xlabel(app.UIAxes, 'Tendon length [m]')
             ylabel(app.UIAxes, 'Tendon Force [N]')
             app.UIAxes.BackgroundColor = [1 1 1];
-            app.UIAxes.Position = [28 47 368 228];
+            app.UIAxes.Position = [28 45 368 228];
+
+            % Create Image3
+            app.Image3 = uiimage(app.TendonstiffnessPanel);
+            app.Image3.Position = [412 45 144 234];
+            app.Image3.ImageSource = 'AchillesTendon.jpg';
 
             % Create MuscleforcePanel
             app.MuscleforcePanel = uipanel(app.UIFigure);
             app.MuscleforcePanel.Title = 'Muscle force ';
             app.MuscleforcePanel.BackgroundColor = [0.8588 0.8157 0.8157];
-            app.MuscleforcePanel.Position = [9 15 306 378];
+            app.MuscleforcePanel.FontWeight = 'bold';
+            app.MuscleforcePanel.FontSize = 14;
+            app.MuscleforcePanel.Position = [9 15 553 378];
 
             % Create Button
             app.Button = uibutton(app.MuscleforcePanel, 'push');
             app.Button.ButtonPushedFcn = createCallbackFcn(app, @ButtonPushed, true);
-            app.Button.Position = [12 237 70 22];
+            app.Button.Position = [12 235 70 22];
             app.Button.Text = '+';
 
             % Create Button_2
             app.Button_2 = uibutton(app.MuscleforcePanel, 'push');
             app.Button_2.ButtonPushedFcn = createCallbackFcn(app, @Button_2Pushed, true);
-            app.Button_2.Position = [12 207 70 22];
+            app.Button_2.Position = [12 205 70 22];
             app.Button_2.Text = '-';
 
             % Create Button_3
             app.Button_3 = uibutton(app.MuscleforcePanel, 'push');
             app.Button_3.ButtonPushedFcn = createCallbackFcn(app, @Button_3Pushed, true);
-            app.Button_3.Position = [12 160 70 22];
+            app.Button_3.Position = [12 158 70 22];
             app.Button_3.Text = '+';
 
             % Create Button_4
             app.Button_4 = uibutton(app.MuscleforcePanel, 'push');
             app.Button_4.ButtonPushedFcn = createCallbackFcn(app, @Button_4Pushed, true);
-            app.Button_4.Position = [12 130 70 22];
+            app.Button_4.Position = [12 128 70 22];
             app.Button_4.Text = '-';
 
             % Create Button_5
             app.Button_5 = uibutton(app.MuscleforcePanel, 'push');
             app.Button_5.ButtonPushedFcn = createCallbackFcn(app, @Button_5Pushed, true);
-            app.Button_5.Position = [12 82 70 22];
+            app.Button_5.Position = [12 80 70 22];
             app.Button_5.Text = '+';
 
             % Create Button_6
             app.Button_6 = uibutton(app.MuscleforcePanel, 'push');
             app.Button_6.ButtonPushedFcn = createCallbackFcn(app, @Button_6Pushed, true);
-            app.Button_6.Position = [12 52 70 22];
+            app.Button_6.Position = [12 50 70 22];
             app.Button_6.Text = '-';
 
             % Create MuscleForceNEditFieldLabel
             app.MuscleForceNEditFieldLabel = uilabel(app.MuscleforcePanel);
             app.MuscleForceNEditFieldLabel.HorizontalAlignment = 'right';
-            app.MuscleForceNEditFieldLabel.Position = [12 304 96 22];
+            app.MuscleForceNEditFieldLabel.FontSize = 14;
+            app.MuscleForceNEditFieldLabel.Position = [-3 302 111 22];
             app.MuscleForceNEditFieldLabel.Text = 'Muscle Force [N]';
 
             % Create MuscleForceNEditField
             app.MuscleForceNEditField = uieditfield(app.MuscleforcePanel, 'numeric');
-            app.MuscleForceNEditField.Position = [123 304 100 22];
+            app.MuscleForceNEditField.Position = [123 302 100 22];
             app.MuscleForceNEditField.Value = 1000;
 
             % Create SoleusEditFieldLabel
             app.SoleusEditFieldLabel = uilabel(app.MuscleforcePanel);
             app.SoleusEditFieldLabel.HorizontalAlignment = 'right';
-            app.SoleusEditFieldLabel.Position = [149 237 42 22];
+            app.SoleusEditFieldLabel.FontSize = 14;
+            app.SoleusEditFieldLabel.FontWeight = 'bold';
+            app.SoleusEditFieldLabel.Position = [140 235 51 22];
             app.SoleusEditFieldLabel.Text = 'Soleus';
 
             % Create SoleusEditField
             app.SoleusEditField = uieditfield(app.MuscleforcePanel, 'numeric');
-            app.SoleusEditField.Position = [120 213 100 22];
+            app.SoleusEditField.Position = [120 211 100 22];
 
-            % Create GastrocnemiusNEditFieldLabel
-            app.GastrocnemiusNEditFieldLabel = uilabel(app.MuscleforcePanel);
-            app.GastrocnemiusNEditFieldLabel.HorizontalAlignment = 'right';
-            app.GastrocnemiusNEditFieldLabel.Position = [115 159 105 22];
-            app.GastrocnemiusNEditFieldLabel.Text = 'Gastrocnemius [N]';
+            % Create GastrocnemiusEditFieldLabel
+            app.GastrocnemiusEditFieldLabel = uilabel(app.MuscleforcePanel);
+            app.GastrocnemiusEditFieldLabel.HorizontalAlignment = 'right';
+            app.GastrocnemiusEditFieldLabel.FontSize = 14;
+            app.GastrocnemiusEditFieldLabel.FontWeight = 'bold';
+            app.GastrocnemiusEditFieldLabel.Position = [114 158 107 22];
+            app.GastrocnemiusEditFieldLabel.Text = 'Gastrocnemius';
 
-            % Create GastrocnemiusNEditField
-            app.GastrocnemiusNEditField = uieditfield(app.MuscleforcePanel, 'numeric');
-            app.GastrocnemiusNEditField.Position = [115 140 100 22];
+            % Create GastrocnemiusEditField
+            app.GastrocnemiusEditField = uieditfield(app.MuscleforcePanel, 'numeric');
+            app.GastrocnemiusEditField.Position = [123 137 100 22];
 
-            % Create RectusFemorisNEditFieldLabel
-            app.RectusFemorisNEditFieldLabel = uilabel(app.MuscleforcePanel);
-            app.RectusFemorisNEditFieldLabel.HorizontalAlignment = 'right';
-            app.RectusFemorisNEditFieldLabel.Position = [118 82 108 22];
-            app.RectusFemorisNEditFieldLabel.Text = 'Rectus Femoris [N]';
+            % Create RectusfemorisEditFieldLabel
+            app.RectusfemorisEditFieldLabel = uilabel(app.MuscleforcePanel);
+            app.RectusfemorisEditFieldLabel.HorizontalAlignment = 'right';
+            app.RectusfemorisEditFieldLabel.FontSize = 14;
+            app.RectusfemorisEditFieldLabel.FontWeight = 'bold';
+            app.RectusfemorisEditFieldLabel.Position = [112 80 107 22];
+            app.RectusfemorisEditFieldLabel.Text = 'Rectus femoris';
 
-            % Create RectusFemorisNEditField
-            app.RectusFemorisNEditField = uieditfield(app.MuscleforcePanel, 'numeric');
-            app.RectusFemorisNEditField.Position = [118 61 100 22];
+            % Create RectusfemorisEditField
+            app.RectusfemorisEditField = uieditfield(app.MuscleforcePanel, 'numeric');
+            app.RectusfemorisEditField.Position = [118 59 100 22];
 
             % Create MuscleForceLabel
             app.MuscleForceLabel = uilabel(app.MuscleforcePanel);
             app.MuscleForceLabel.FontSize = 14;
             app.MuscleForceLabel.FontWeight = 'bold';
-            app.MuscleForceLabel.Position = [123 326 144 36];
+            app.MuscleForceLabel.Position = [123 324 144 36];
             app.MuscleForceLabel.Text = 'Muscle Force';
+
+            % Create Image2
+            app.Image2 = uiimage(app.MuscleforcePanel);
+            app.Image2.Position = [276 5 243 368];
+            app.Image2.ImageSource = '2DModel_LabelMuscles-01.png';
 
             % Create ReadyLampLabel
             app.ReadyLampLabel = uilabel(app.UIFigure);
             app.ReadyLampLabel.HorizontalAlignment = 'right';
-            app.ReadyLampLabel.Position = [803 380 50 22];
+            app.ReadyLampLabel.Position = [673 704 50 22];
             app.ReadyLampLabel.Text = 'Ready ?';
 
             % Create ReadyLamp
             app.ReadyLamp = uilamp(app.UIFigure);
-            app.ReadyLamp.Position = [856 376 30 30];
-
-            % Create Image2
-            app.Image2 = uiimage(app.UIFigure);
-            app.Image2.Position = [794 461 222 344];
-            app.Image2.ImageSource = '2DModel_v2_Crop.png';
+            app.ReadyLamp.Position = [726 700 30 30];
 
             % Create MusculoskeletalmodelLabel
             app.MusculoskeletalmodelLabel = uilabel(app.UIFigure);
