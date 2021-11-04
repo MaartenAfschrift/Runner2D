@@ -45,8 +45,6 @@ nq.trunk            = 1; % trunk
 GRFi.r              = 13:14;
 GRFi.l              = 15:16;
 GRFi.all            = [GRFi.r,GRFi.l];
-% model mass
-body_mass = S.mass;
 
 %% collocation scheme
 pathCollocationScheme = [pathRepo,'/CollocationScheme'];
@@ -71,7 +69,6 @@ tl = load(fullfile(pathRepo,'Polynomials',S.PolyFolder,'muscle_spanning_joint_IN
 pathCasADiFunctions = [pathRepo,'/CasADiFunctions'];
 OutPath = fullfile(pathCasADiFunctions,S.CasadiFunc_Folders);
 f_lMT_vMT_dM = Function.load(fullfile(OutPath,'f_lMT_vMT_dM'));
-% fgetMetabolicEnergySmooth2004all = Function.load(fullfile(OutPath,'fgetMetabolicEnergySmooth2004all'));
 f_BackActivationDynamics = Function.load(fullfile(OutPath,'f_BackActivationDynamics'));
 f_FiberVelocity_TendonForce = Function.load(fullfile(OutPath,'f_FiberVelocity_TendonForce'));
 f_FiberLength_TendonForce = Function.load(fullfile(OutPath,'f_FiberLength_TendonForce'));
@@ -81,18 +78,8 @@ f_T5 = Function.load(fullfile(OutPath,'f_T5'));
 f_T4 = Function.load(fullfile(OutPath,'f_T4'));
 f_T3 = Function.load(fullfile(OutPath,'f_T3'));
 f_ActivationDynamics = Function.load(fullfile(OutPath,'f_ActivationDynamics'));
-
-fgetMetabolicEnergySmooth2004all = Function.load(fullfile(pathCasADiFunctions,'EnergyModels','fgetMetabolicEnergySmooth2004all'));
-fgetMetabolicEnergy_MargariaSmooth  = Function.load(fullfile(pathCasADiFunctions,'EnergyModels', 'fgetMetabolicEnergy_MargariaSmooth'));
 load(fullfile(OutPath,'MTparameters.mat'),'MTparameters');
 
-%% additional muscle parameters
-pctst = getSlowTwitchRatios_2D(muscleNames);
-tension     = getSpecificTensions_2D(muscleNames);
-pctst= [pctst; pctst];
-[massM] =GetMuscleMass(MTparameters,tension');
-massM = [massM massM];
-Fmax = [MTparameters(1,:) MTparameters(1,:)];
 
 %% Experimental data
 
@@ -187,10 +174,6 @@ pelvis_tx0 = Sx(2*jointi.pelvis.tx-1,1);
 pelvis_txf = Sx(2*jointi.pelvis.tx-1,N+1);
 dist_trav_tot = pelvis_txf-pelvis_tx0; % distance traveled
 
-% pre-allocate matrices to store temporary variables (easy to get output)
-% Out_lMT = MX(NMuscle,N);    Out_vMT = MX(NMuscle,N);
-% Out_Tk  = MX(nq.all,N);     Out_GRF = MX(4,N);
-
 % Time step
 h = tf/N;
 
@@ -221,14 +204,10 @@ for k = 1:N
     MA_ankle_r  = MA_r(mai(3).mus.l',3);
     % Both legs
     lMTk_lr     = [lMTk_l;lMTk_r];          
-%     Out_lMT(:,k) = lMTk_lr;
     vMTk_lr     = [vMTk_l;vMTk_r];          
-%     Out_vMT(:,k) = vMTk_lr;
     % Call external function (Skeleton dynamics using .dll file)
     [Res]       = F([Sx(:,k);Sqdd(:,k)]);
     Tk          = Res(jointi.all);
-%     Out_Tk(:,k) = Tk;
-%     Out_GRF(:,k)= Res(GRFi.all);
     % add feedforward and feedback componets
     % backward euler integration scheme
     qk      = Sx(1:2:end,k);      qdk = Sx(2:2:end,k);    qddk = Sqdd(:,k);
@@ -282,22 +261,7 @@ for k = 1:N
     opti.subject_to(Tk(jointi.gr_pelvis,1) == 0);
     % constraints contraction dynamics
     opti.subject_to(Hilldiffk == 0);
-    
-%     if W.E>0
-%         % get the metabolic energy
-%         % Get muscle fiber lengths
-%         [~,lMtildek] = f_FiberLength_TendonForce(SFTtilde(:,k),lMTk_lr);
-%         % Get muscle fiber velocities
-%         [vMk,~] = f_FiberVelocity_TendonForce(SFTtilde(:,k),SdFTtilde(:,k),lMTk_lr,vMTk_lr);
-%         % Get metabolic energy rate        
-%         [e_tot,~,~,~,~,~] = fgetMetabolicEnergySmooth2004all(a(:,k),a(:,k),...
-%             lMtildek,vMk,Fcek,Fpassk,massM,pctst,Fisok,Fmax,body_mass,10);   
-%         
-% %         e_tot = fgetMetabolicEnergy_MargariaSmooth(Fcek,vMk,0.1);
-%     else
-%         e_tot= zeros(NMuscle,1);
-%     end
-    
+
     % objective function
     J = J + 1/(dist_trav_tot)*(...
         W.A*(f_sumsqr_exp(a(:,k),W.exp_A))*h + ...
@@ -337,9 +301,7 @@ else
 end
 % constraint on average speed
 vel_aver_tot = dist_trav_tot/tf;
-%J = 0.01.*J/N - 10*vel_aver_tot.^2;
 J = 0.01.*J/N - 10*vel_aver_tot;
-% opti.subject_to(vel_aver_tot - S.v_tgt == 0);
 
 % set the initial guess
 opti.set_initial(tf, guess.tf);
@@ -371,7 +333,6 @@ end
 Outname = fullfile(OutFolder,[S.savename '_log.txt']);
 diary(Outname);
 % solve the OCP
-% sol = opti.solve();
 [w_opt,Results.stats] = solve_NLPSOL(opti,optionssol);
 diary off
 

@@ -88,11 +88,6 @@ TendonInfo.Atendon([7:8 16:17]) = Settings.kTendon_CalfM;
 TendonInfo.shift = getShift(TendonInfo.Atendon);
 
 %% Metabolic energy model parameters
-% We extract the specific tensions and slow twitch rations.
-tension     = getSpecificTensions_2D(muscleNames);
-tensions    = [tension;tension];
-pctst       = getSlowTwitchRatios_2D(muscleNames);
-pctsts      = [pctst;pctst];
 
 % We load some variables for the polynomial approximations
 MInfo = load(fullfile(MainPath,'Polynomials',PolyFolder,'MuscleInfo.mat'));
@@ -152,10 +147,10 @@ if ~exist('TendonInfo','var')
 end
 
 for m = 1:NMuscle    
-    [Hilldiff(m),FT(m),Fce(m),Fpass(m),Fiso(m),vMmax(m),massM(m)] = ...
+    [Hilldiff(m),FT(m),Fce(m),Fpass(m),Fiso(m),vMmax(m)] = ...
         ForceEquilibrium_FtildeState(a(m),FTtilde(m),dFTtilde(m),...
         lMT(m),vMT(m),MTparameters_m(:,m),Fvparam,Fpparam,Faparam,...
-        tensions(m),TendonInfo.Atendon(m),TendonInfo.shift(m));    
+        TendonInfo.Atendon(m),TendonInfo.shift(m));    
 end
 f_forceEquilibrium_FtildeState = ...
     Function('f_forceEquilibrium_FtildeState',{a,FTtilde,dFTtilde,...
@@ -197,32 +192,6 @@ dadt_m = BackActivationDynamics(e_m,a_m);
 f_ActivationDynamics = ...
     Function('f_ActivationDynamics',{e_m,a_m},{dadt_m},...
     {'e','a'},{'dadt'});
-
-%% Metabolic energy model
-act_SX          = SX.sym('act_SX',NMuscle,1); % Muscle activations
-exc_SX          = SX.sym('exc_SX',NMuscle,1); % Muscle excitations
-lMtilde_SX      = SX.sym('lMtilde_SX',NMuscle,1); % N muscle fiber lengths
-vMtilde_SX      = SX.sym('vMtilde_SX',NMuscle,1); % N muscle fiber vel
-vM_SX           = SX.sym('vM_SX',NMuscle,1); % Muscle fiber velocities
-Fce_SX          = SX.sym('FT_SX',NMuscle,1); % Contractile element forces
-Fpass_SX        = SX.sym('FT_SX',NMuscle,1); % Passive element forces
-Fiso_SX         = SX.sym('Fiso_SX',NMuscle,1); % N forces (F-L curve)
-musclemass_SX   = SX.sym('musclemass_SX',NMuscle,1); % Muscle mass
-vcemax_SX       = SX.sym('vcemax_SX',NMuscle,1); % Max contraction vel
-pctst_SX        = pctsts; % Slow twitch ratio
-Fmax_SX         = MTparameters_m(1,:)';
-modelmass_SX    = SX.sym('modelmass_SX',1); % Model mass
-b_SX            = SX.sym('b_SX',1); % Parameter determining tanh smoothness
-% Bhargava et al. (2004)
-[energy_total_sm_SX,Adot_sm_SX,Mdot_sm_SX,Sdot_sm_SX,Wdot_sm_SX,...
-    energy_model_sm_SX] = getMetabolicEnergySmooth2004all(exc_SX,act_SX,...
-    lMtilde_SX,vM_SX,Fce_SX,Fpass_SX,musclemass_SX,pctst_SX,Fiso_SX,...
-    Fmax_SX,modelmass_SX,b_SX);
-fgetMetabolicEnergySmooth2004all = ...
-    Function('fgetMetabolicEnergySmooth2004all',...
-    {exc_SX,act_SX,lMtilde_SX,vM_SX,Fce_SX,Fpass_SX,musclemass_SX,...
-    Fiso_SX,modelmass_SX,b_SX},{energy_total_sm_SX,...
-    Adot_sm_SX,Mdot_sm_SX,Sdot_sm_SX,Wdot_sm_SX,energy_model_sm_SX});
 
 %% small functions
 
@@ -277,7 +246,6 @@ if ~isfolder(OutPath)
 end
 save(fullfile(OutPath,'MTparameters.mat'),'MTparameters');
 f_lMT_vMT_dM.save(fullfile(OutPath,'f_lMT_vMT_dM'));
-fgetMetabolicEnergySmooth2004all.save(fullfile(OutPath,'fgetMetabolicEnergySmooth2004all'));
 f_ActivationDynamics.save(fullfile(OutPath,'f_ActivationDynamics'));
 f_BackActivationDynamics.save(fullfile(OutPath,'f_BackActivationDynamics'));
 f_FiberVelocity_TendonForce.save(fullfile(OutPath,'f_FiberVelocity_TendonForce'));

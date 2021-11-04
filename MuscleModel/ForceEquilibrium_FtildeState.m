@@ -4,9 +4,9 @@
 % Author: Antoine Falisse
 % Date: 12/19/2018
 % 
-function [err, FT, Fce, Fpass, Fiso, vMmax, massM,lM,vM] = ...
+function [err, FT, Fce, Fpass, Fiso, vMmax,lM,vM] = ...
     ForceEquilibrium_FtildeState(a,fse,dfse,lMT,vMT,params,Fvparam,...
-        Fpparam,Faparam,tension,varargin)
+        Fpparam,Faparam,varargin)
 
 if ~isempty(varargin)
     Atendon = varargin{1};
@@ -21,8 +21,6 @@ lMo = ones(size(a,1),1)*params(2,:);
 lTs = ones(size(a,1),1)*params(3,:);
 alphao = ones(size(a,1),1)*params(4,:);
 vMmax = ones(size(a,1),1)*params(5,:);
-volM = FMo.*lMo;
-massM = volM.*(1059.7)./(tension*1e6);
 
 % Inverse tendon force-length characteristic
 lTtilde = log(5*(fse + 0.25 - shift))./Atendon + 0.995;
