@@ -185,6 +185,9 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             % print start simulation
             app.SimulationResults.Value = [app.SimulationResults.Value; {'Start simulation'}];
             
+            % get savename from text
+            S.savename = app.FirstNameEditField.Value;
+            
             % adjust the savename if this file already exists
             BoolNameAdjusted = false;
             if exist(fullfile(S.pathRepo,'Results',S.ResultsFolder,[S.savename '.mat']),'file')
@@ -372,9 +375,9 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
 
         % Value changed function: FirstNameEditField
         function FirstNameEditFieldValueChanged(app, event)
-            global S
-            value = app.FirstNameEditField.Value;
-            S.savename      = value;
+%             global S
+%             value = app.FirstNameEditField.Value;
+%             S.savename      = value;
         end
 
         % Close request function: UIFigure

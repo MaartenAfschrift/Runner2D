@@ -21,7 +21,9 @@ Requirements:
 
 ## GUI
 
+![](App/figs/GUI_PrintScreen.png)
 
+Overview of the graphical user interface
 
 
 
