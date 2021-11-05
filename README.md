@@ -33,6 +33,3 @@ Some additional information:
 - Assumed left-right symmetry which enables us to simulate half a gait cycle
 - 1 contact sphere on calcaneus (heel) and two contact spheres on toes
 - Used polynomials to approximate muscle-tendon-length and moment arms (see FitPolynomials)
-
-
-
