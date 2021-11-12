@@ -39,6 +39,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
         ReadyLampLabel                matlab.ui.control.Label
         ReadyLamp                     matlab.ui.control.Lamp
         MusculoskeletalmodelLabel     matlab.ui.control.Label
+        Save2SheetButton              matlab.ui.control.Button
     end
 
     % Callbacks that handle component events
@@ -54,8 +55,8 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             global model_state
             
             % add path to simulation code
-            TxtPath = which('MyID_PredSim2D_ab87ex.txt');
-            [MainPath,~,~] = fileparts(TxtPath);
+            TxtPath = which('Gait18_Visual.osim');
+            MainPath = fileparts(fileparts(TxtPath));
             addpath(genpath(fullfile(MainPath)));
             app.SimulationResults.Value = {'Start GUI'};
             
@@ -136,7 +137,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             %global MainPath
             global Results
             global S
-            persistent ScoreVect
+            global ScoreVect
             
             % adapt model based on user input
             app.SimulationResults.Value = [app.SimulationResults.Value; {'Adapting strength of the muscles in the model'}];
@@ -185,9 +186,6 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             % print start simulation
             app.SimulationResults.Value = [app.SimulationResults.Value; {'Start simulation'}];
             
-            % get savename from text
-            S.savename = app.FirstNameEditField.Value;
-            
             % adjust the savename if this file already exists
             BoolNameAdjusted = false;
             if exist(fullfile(S.pathRepo,'Results',S.ResultsFolder,[S.savename '.mat']),'file')
@@ -213,8 +211,10 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             
             % adjust savename to original name (this causes problems with
             % the visulaisation
+            S.namesheet = S.savename;
             if BoolNameAdjusted
                 S.savename= NameOr;
+                S.namesheet = NameNew;
             end
             if Results.stats.success  % only store result when simulation was succesfull
                 % print running speed
@@ -375,9 +375,9 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
 
         % Value changed function: FirstNameEditField
         function FirstNameEditFieldValueChanged(app, event)
-%             global S
-%             value = app.FirstNameEditField.Value;
-%             S.savename      = value;
+            global S
+            value = app.FirstNameEditField.Value;
+            S.savename      = value;
         end
 
         % Close request function: UIFigure
@@ -388,7 +388,78 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
 
         % Callback function
         function UIFigureCloseRequest2(app, event)
-            delete(app)            
+            delete(app)
+        end
+
+        % Button pushed function: Save2SheetButton
+        function Save2SheetButtonPushed(app, event)
+            global S
+            global Results
+            
+            % ID for URL to spread sheet
+            spreadsheetID = '1ZUZ-RShKnZ43-_WUhOOVf0SlH6AwzJSM7-rFp5P3bOc';
+            % read content of google sheet to not overwrite existing info
+            sheetcontent = GetGoogleSpreadsheet(spreadsheetID);
+            [nrow,~] = size(sheetcontent);
+            
+            % check if the last name is equal to
+            if strcmp(S.namesheet,sheetcontent{nrow,1})
+                % Create a unique name
+                ct = 1;
+                while strcmp(S.namesheet,sheetcontent{nrow,1})
+                    NameNew = [S.namesheet '_' num2str(ct)];
+                    ct = ct+1;
+                end
+                S.namesheet = NameNew;
+            end     
+            datainput = cell(1,6);
+            sheetID = '0';
+            pos = [nrow+1,1];
+            
+            datainput{1} = S.namesheet;
+            datainput{2} = round(Results.speed*3.6,4);
+            datainput{3} = app.SoleusEditField.Value;
+            datainput{4} = app.GastrocnemiusEditField.Value;
+            datainput{5} = app.RectusfemorisEditField.Value;
+            datainput{6} = app.NormachillestendonstiffnessSlider.Value;
+            
+            mat2sheets(spreadsheetID, sheetID, pos, datainput);
+            app.SimulationResults.Value = [app.SimulationResults.Value; {['Your results were printed on the google sheets as ' S.namesheet]}];
+            
+        end
+
+        % Button pushed function: ResultsTableButton
+        function ResultsTableButtonPushed(app, event)
+            % print Table Top results to screen
+            
+            TxtCell = cell(11,1);
+            TxtCell{1,1} = 'Hall of Fame:';
+            
+            % read the spreadsheet
+            spreadsheetID = '1ZUZ-RShKnZ43-_WUhOOVf0SlH6AwzJSM7-rFp5P3bOc';
+            sheetcontent = GetGoogleSpreadsheet(spreadsheetID);
+            
+            SpeedsChar = sheetcontent(2:end,2);
+            SpeedsDouble = nan(length(SpeedsChar),1);
+            NamesScore = sheetcontent(2:end,1);
+            for i=1:length(SpeedsChar)
+                SpeedsDouble(i) = str2double(SpeedsChar(i,:));
+            end
+            [ScoreSort,isort] = sort(SpeedsDouble,'descend');
+            nResults = 10;
+            if length(isort) < nResults
+                nResults = length(isort);
+            end
+            for i=1:nResults
+                TxtCell{i+1,1} = [num2str(i) ') ' num2str(SpeedsDouble(isort(i))),...
+                    ' km/h: by ' NamesScore{isort(i)}];
+            end
+        
+            
+            PrintResultsAsFigure(TxtCell)
+            
+            
+            
         end
     end
 
@@ -407,18 +478,19 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             % Create SimulateButton
             app.SimulateButton = uibutton(app.UIFigure, 'push');
             app.SimulateButton.ButtonPushedFcn = createCallbackFcn(app, @SimulateButtonPushed, true);
-            app.SimulateButton.Position = [70 648 139 47];
+            app.SimulateButton.Position = [73 656 113 42];
             app.SimulateButton.Text = 'Simulate';
 
             % Create VideoButton
             app.VideoButton = uibutton(app.UIFigure, 'push');
             app.VideoButton.ButtonPushedFcn = createCallbackFcn(app, @VideoButtonPushed, true);
-            app.VideoButton.Position = [458 648 150 42];
+            app.VideoButton.Position = [305 656 113 42];
             app.VideoButton.Text = 'Video';
 
             % Create ResultsTableButton
             app.ResultsTableButton = uibutton(app.UIFigure, 'push');
-            app.ResultsTableButton.Position = [259 650 150 42];
+            app.ResultsTableButton.ButtonPushedFcn = createCallbackFcn(app, @ResultsTableButtonPushed, true);
+            app.ResultsTableButton.Position = [189 656 113 42];
             app.ResultsTableButton.Text = 'Results Table';
 
             % Create SimulatonoutputTextAreaLabel
@@ -624,6 +696,12 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             app.MusculoskeletalmodelLabel.FontWeight = 'bold';
             app.MusculoskeletalmodelLabel.Position = [825 804 191 42];
             app.MusculoskeletalmodelLabel.Text = 'Musculoskeletal model';
+
+            % Create Save2SheetButton
+            app.Save2SheetButton = uibutton(app.UIFigure, 'push');
+            app.Save2SheetButton.ButtonPushedFcn = createCallbackFcn(app, @Save2SheetButtonPushed, true);
+            app.Save2SheetButton.Position = [419 656 116 42];
+            app.Save2SheetButton.Text = 'Save2Sheet';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
