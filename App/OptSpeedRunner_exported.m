@@ -3,43 +3,42 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                      matlab.ui.Figure
-        SimulateButton                matlab.ui.control.Button
-        VideoButton                   matlab.ui.control.Button
-        ResultsTableButton            matlab.ui.control.Button
-        SimulatonoutputTextAreaLabel  matlab.ui.control.Label
-        SimulationResults             matlab.ui.control.TextArea
-        FirstNameEditFieldLabel       matlab.ui.control.Label
-        FirstNameEditField            matlab.ui.control.EditField
-        DagvandewetenschapLabel       matlab.ui.control.Label
-        Image                         matlab.ui.control.Image
-        ClearWindowButton             matlab.ui.control.Button
-        ScoreAxis                     matlab.ui.control.UIAxes
-        TendonstiffnessPanel          matlab.ui.container.Panel
-        NormachillestendonstiffnessSliderLabel  matlab.ui.control.Label
-        NormachillestendonstiffnessSlider  matlab.ui.control.Slider
-        UIAxes                        matlab.ui.control.UIAxes
-        Image3                        matlab.ui.control.Image
-        MuscleforcePanel              matlab.ui.container.Panel
-        Button                        matlab.ui.control.Button
-        Button_2                      matlab.ui.control.Button
-        Button_3                      matlab.ui.control.Button
-        Button_4                      matlab.ui.control.Button
-        Button_5                      matlab.ui.control.Button
-        Button_6                      matlab.ui.control.Button
-        MuscleForceNEditFieldLabel    matlab.ui.control.Label
-        MuscleForceNEditField         matlab.ui.control.NumericEditField
-        SoleusEditFieldLabel          matlab.ui.control.Label
-        SoleusEditField               matlab.ui.control.NumericEditField
-        GastrocnemiusEditFieldLabel   matlab.ui.control.Label
-        GastrocnemiusEditField        matlab.ui.control.NumericEditField
-        RectusfemorisEditFieldLabel   matlab.ui.control.Label
-        RectusfemorisEditField        matlab.ui.control.NumericEditField
-        MuscleForceLabel              matlab.ui.control.Label
-        Image2                        matlab.ui.control.Image
-        ReadyLampLabel                matlab.ui.control.Label
-        ReadyLamp                     matlab.ui.control.Lamp
         MusculoskeletalmodelLabel     matlab.ui.control.Label
-        Save2SheetButton              matlab.ui.control.Button
+        ReadyLamp                     matlab.ui.control.Lamp
+        ReadyLampLabel                matlab.ui.control.Label
+        MuscleforcePanel              matlab.ui.container.Panel
+        Image2                        matlab.ui.control.Image
+        MuscleForceLabel              matlab.ui.control.Label
+        RectusfemorisEditField        matlab.ui.control.NumericEditField
+        RectusfemorisEditFieldLabel   matlab.ui.control.Label
+        GastrocnemiusEditField        matlab.ui.control.NumericEditField
+        GastrocnemiusEditFieldLabel   matlab.ui.control.Label
+        SoleusEditField               matlab.ui.control.NumericEditField
+        SoleusEditFieldLabel          matlab.ui.control.Label
+        MuscleForceNEditField         matlab.ui.control.NumericEditField
+        MuscleForceNEditFieldLabel    matlab.ui.control.Label
+        Button_6                      matlab.ui.control.Button
+        Button_5                      matlab.ui.control.Button
+        Button_4                      matlab.ui.control.Button
+        Button_3                      matlab.ui.control.Button
+        Button_2                      matlab.ui.control.Button
+        Button                        matlab.ui.control.Button
+        TendonstiffnessPanel          matlab.ui.container.Panel
+        Image3                        matlab.ui.control.Image
+        NormachillestendonstiffnessSlider  matlab.ui.control.Slider
+        NormachillestendonstiffnessSliderLabel  matlab.ui.control.Label
+        UIAxes                        matlab.ui.control.UIAxes
+        ClearWindowButton             matlab.ui.control.Button
+        Image                         matlab.ui.control.Image
+        DagvandewetenschapLabel       matlab.ui.control.Label
+        FirstNameEditField            matlab.ui.control.EditField
+        FirstNameEditFieldLabel       matlab.ui.control.Label
+        SimulationResults             matlab.ui.control.TextArea
+        SimulatonoutputTextAreaLabel  matlab.ui.control.Label
+        ResultsTableButton            matlab.ui.control.Button
+        VideoButton                   matlab.ui.control.Button
+        SimulateButton                matlab.ui.control.Button
+        ScoreAxis                     matlab.ui.control.UIAxes
     end
 
     % Callbacks that handle component events
@@ -391,7 +390,7 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             delete(app)
         end
 
-        % Button pushed function: Save2SheetButton
+        % Callback function
         function Save2SheetButtonPushed(app, event)
             global S
             global Results
@@ -471,9 +470,20 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
 
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
+            app.UIFigure.Color = [1 1 1];
             app.UIFigure.Position = [100 100 1252 874];
             app.UIFigure.Name = 'MATLAB App';
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @UIFigureCloseRequest, true);
+
+            % Create ScoreAxis
+            app.ScoreAxis = uiaxes(app.UIFigure);
+            title(app.ScoreAxis, 'Score History')
+            xlabel(app.ScoreAxis, 'Attempt')
+            ylabel(app.ScoreAxis, 'Running speed [km/h]')
+            app.ScoreAxis.XTickLabelRotation = 0;
+            app.ScoreAxis.YTickLabelRotation = 0;
+            app.ScoreAxis.ZTickLabelRotation = 0;
+            app.ScoreAxis.Position = [37 428 554 160];
 
             % Create SimulateButton
             app.SimulateButton = uibutton(app.UIFigure, 'push');
@@ -484,13 +494,13 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             % Create VideoButton
             app.VideoButton = uibutton(app.UIFigure, 'push');
             app.VideoButton.ButtonPushedFcn = createCallbackFcn(app, @VideoButtonPushed, true);
-            app.VideoButton.Position = [305 656 113 42];
+            app.VideoButton.Position = [415 656 113 42];
             app.VideoButton.Text = 'Video';
 
             % Create ResultsTableButton
             app.ResultsTableButton = uibutton(app.UIFigure, 'push');
             app.ResultsTableButton.ButtonPushedFcn = createCallbackFcn(app, @ResultsTableButtonPushed, true);
-            app.ResultsTableButton.Position = [189 656 113 42];
+            app.ResultsTableButton.Position = [243 656 113 42];
             app.ResultsTableButton.Text = 'Results Table';
 
             % Create SimulatonoutputTextAreaLabel
@@ -535,13 +545,6 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             app.ClearWindowButton.Position = [1110 708 100 22];
             app.ClearWindowButton.Text = 'Clear Window';
 
-            % Create ScoreAxis
-            app.ScoreAxis = uiaxes(app.UIFigure);
-            title(app.ScoreAxis, 'Score History')
-            xlabel(app.ScoreAxis, 'Attempt')
-            ylabel(app.ScoreAxis, 'Running speed')
-            app.ScoreAxis.Position = [37 428 554 160];
-
             % Create TendonstiffnessPanel
             app.TendonstiffnessPanel = uipanel(app.UIFigure);
             app.TendonstiffnessPanel.Title = 'Tendon stiffness';
@@ -549,6 +552,16 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             app.TendonstiffnessPanel.FontWeight = 'bold';
             app.TendonstiffnessPanel.FontSize = 14;
             app.TendonstiffnessPanel.Position = [656 15 584 378];
+
+            % Create UIAxes
+            app.UIAxes = uiaxes(app.TendonstiffnessPanel);
+            title(app.UIAxes, 'Achilles tendon stiffness')
+            xlabel(app.UIAxes, 'Tendon length [m]')
+            ylabel(app.UIAxes, 'Tendon Force [N]')
+            app.UIAxes.XTickLabelRotation = 0;
+            app.UIAxes.YTickLabelRotation = 0;
+            app.UIAxes.ZTickLabelRotation = 0;
+            app.UIAxes.Position = [28 45 368 228];
 
             % Create NormachillestendonstiffnessSliderLabel
             app.NormachillestendonstiffnessSliderLabel = uilabel(app.TendonstiffnessPanel);
@@ -562,14 +575,6 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             app.NormachillestendonstiffnessSlider.ValueChangedFcn = createCallbackFcn(app, @NormachillestendonstiffnessSliderValueChanged, true);
             app.NormachillestendonstiffnessSlider.Position = [134 308 150 3];
             app.NormachillestendonstiffnessSlider.Value = 35;
-
-            % Create UIAxes
-            app.UIAxes = uiaxes(app.TendonstiffnessPanel);
-            title(app.UIAxes, 'Achilles tendon stiffness')
-            xlabel(app.UIAxes, 'Tendon length [m]')
-            ylabel(app.UIAxes, 'Tendon Force [N]')
-            app.UIAxes.BackgroundColor = [1 1 1];
-            app.UIAxes.Position = [28 45 368 228];
 
             % Create Image3
             app.Image3 = uiimage(app.TendonstiffnessPanel);
@@ -696,12 +701,6 @@ classdef OptSpeedRunner_exported < matlab.apps.AppBase
             app.MusculoskeletalmodelLabel.FontWeight = 'bold';
             app.MusculoskeletalmodelLabel.Position = [825 804 191 42];
             app.MusculoskeletalmodelLabel.Text = 'Musculoskeletal model';
-
-            % Create Save2SheetButton
-            app.Save2SheetButton = uibutton(app.UIFigure, 'push');
-            app.Save2SheetButton.ButtonPushedFcn = createCallbackFcn(app, @Save2SheetButtonPushed, true);
-            app.Save2SheetButton.Position = [419 656 116 42];
-            app.Save2SheetButton.Text = 'Save2Sheet';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
